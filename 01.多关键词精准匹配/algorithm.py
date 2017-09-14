@@ -88,7 +88,7 @@ def kmp_algorithm(kws, context):
 
 
 @time_analyze
-def navie_matcher(kws, context):
+def navie_algorithm(kws, context):
     """ 朴素算法 """
     def matcher(t, p):
         """
@@ -167,7 +167,7 @@ def main():
 
     common_algorithm(kws, context)
     kmp_algorithm(kws, context)
-    navie_matcher(kws, context)
+    navie_algorithm(kws, context)
 
 if __name__ == "__main__":
     main()
