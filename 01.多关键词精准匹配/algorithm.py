@@ -5,6 +5,7 @@
 from functools import wraps
 from time import clock
 import ahocorasick
+import jieba
 
 
 def time_analyze(func):
@@ -12,7 +13,7 @@ def time_analyze(func):
     @wraps(func)
     def consume(*args, **kwargs):
         # 重复执行次数（单次执行速度太快）
-        exec_times = 100
+        exec_times = 1
         start = clock()
         for i in range(exec_times):
             func(*args, **kwargs)
@@ -245,6 +246,11 @@ def main():
 
     kws = ["智人", "尼安德特人", "基因", "认知能力", "改变", "黑猩猩"]
 
+    kws = []
+    for kw in jieba.cut(context):
+        kws.append(kw.encode("utf-8"))
+
+    # print kws
     common_algorithm(kws, context)
     kmp_algorithm(kws, context)
     navie_algorithm(kws, context)
