@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-"""
-多关键词精准匹配 - 普通算法
+""" 多关键词精准匹配 """
 
-使用 Python 默认 字符串查找算法 完成
-"""
+from functools import wraps
+from time import clock
 
 context = """
     通过文字创造出想象的现实，就能让大批互不相识的人有效合作，而且效果还不只如此。正由于大规模的人类合作是以虚构的故事作为基
@@ -61,27 +60,91 @@ context = """
 kws = ["智人", "尼安德特人", "基因", "认知能力", "改变", "黑猩猩"]
 
 
-def position(kw, context):
-    """获取关键词在文本中的位置"""
-    positions = []
-    p = 0
-    while 1:
-        p = context.find(kw, p)
-        if p == -1:
-            break
-        else:
-            positions.append(p)
-            p += 1
+def time_analyze(func):
+    """ 获取程序执行时间 """
+    @wraps(func)
+    def consume(*args, **kwargs):
+        exec_times = 1000
+        start = clock()
+        for i in range(exec_times):
+            func(*args, **kwargs)
+
+        finish = clock()
+        print "{:<20}{:10.6} s".format(func.__name__ + ":", finish - start)
+
+    return consume
+
+
+@time_analyze
+def common_algorithm(kw, context):
+    """ 使用 Python 默认 字符串查找算法 完成 """
+
+    def position(kw, context):
+        """获取关键词在文本中的位置"""
+        positions = []
+        p = 0
+        while 1:
+            p = context.find(kw, p)
+            if p == -1:
+                break
+            else:
+                positions.append(p)
+                p += 1
+
+        return positions
+
+    positions = {}
+    for kw in kws:
+        positions[kw] = position(kw, context)
+
+    return positions
+
+
+@time_analyze
+def kmp_algorithm(kw, context):
+    """ 使用 KMP 字符串查找算法 完成 """
+
+    class KMP:
+
+        def partial(self, pattern):
+            """ Calculate partial match table: String -> [Int]"""
+            ret = [0]
+
+            for i in range(1, len(pattern)):
+                j = ret[i - 1]
+                while j > 0 and pattern[j] != pattern[i]:
+                    j = ret[j - 1]
+                ret.append(j + 1 if pattern[j] == pattern[i] else j)
+            return ret
+
+        def search(self, T, P):
+            """ 
+            KMP search main algorithm: String -> String -> [Int] 
+            Return all the matching position of pattern string P in S
+            """
+            partial, ret, j = self.partial(P), [], 0
+
+            for i in range(len(T)):
+                while j > 0 and T[i] != P[j]:
+                    j = partial[j - 1]
+                if T[i] == P[j]:
+                    j += 1
+                if j == len(P):
+                    ret.append(i - (j - 1))
+                    j = 0
+
+            return ret
+
+    positions = {}
+    for kw in kws:
+        positions[kw] = KMP().search(context, kw)
 
     return positions
 
 
 def main():
-    positions = {}
-    for kw in kws:
-        positions[kw] = position(kw, context)
+    common_algorithm(kws, context)
+    kmp_algorithm(kws, context)
 
-    print positions
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
