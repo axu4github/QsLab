@@ -173,7 +173,11 @@ def rabin_karp_algorithm(kws, context):
 
 @time_analyze
 def ahocorasick_algorithm(kws, context):
-    """ 有限自动机算法 """
+    """ 
+    有限自动机算法 
+
+    算法有点问题结果不对差几位，需要调整。
+    """
     tree = ahocorasick.Automaton()
     for i, kw in enumerate(kws):
         tree.add_word(kw, (i, kw))
