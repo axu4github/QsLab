@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import algorithm
+import jieba
+from algorithm import (
+    common_algorithm,
+    kmp_algorithm,
+    navie_algorithm,
+    rabin_karp_algorithm,
+    ahocorasick_algorithm
+)
 
 
 class AlgorithmsTest(unittest.TestCase):
 
     def setUp(self):
-        context = """
+        self.context = """
             通过文字创造出想象的现实，就能让大批互不相识的人有效合作，而且效果还不只如此。正由于大规模的人类合作是以虚构的故事作为基
             础，只要改变所讲的故事，就能改变人类合作的方式。只要在对的情境之下，这些故事就能迅速改变。例如在1789年，法国人几乎是在一夕之
             间，相信的故事就从“天赋君权”转成“人民做主”。因此，自从认知革命之后，智人就能依据不断变化的需求迅速调整行为。这等于开启了一条采
@@ -59,10 +66,29 @@ class AlgorithmsTest(unittest.TestCase):
             起500人来同心协力，于是输赢早已预定。而且，就算智人输了第一战，他们也会快速找出新的策略，在下一战讨回来。
         """
 
-        kws = ["智人", "尼安德特人", "基因", "认知能力", "改变", "黑猩猩"]
+        self.kws = ["智人", "尼安德特人", "基因", "认知能力", "改变", "黑猩猩"]
 
-    # def test_ahocorasick_algorithm(self):
-    #     algorithm.ahocorasick_algorithm(self.kws, self.context)
+        kws = []
+        for kw in jieba.cut(self.context):
+            kws.append(kw.encode("utf-8"))
+
+        self.kws = kws
+
+    def test_common_algorithm(self):
+        common_algorithm(self.kws, self.context)
+
+    def test_kmp_algorithm(self):
+        kmp_algorithm(self.kws, self.context)
+
+    def test_navie_algorithm(self):
+        navie_algorithm(self.kws, self.context)
+
+    def test_rabin_karp_algorithm(self):
+        rabin_karp_algorithm(self.kws, self.context)
+
+    def test_ahocorasick_algorithm(self):
+        ahocorasick_algorithm(self.kws, self.context)
+
 
 if __name__ == "__main__":
     unittest.main()
