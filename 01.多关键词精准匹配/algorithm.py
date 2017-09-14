@@ -4,6 +4,7 @@
 
 from functools import wraps
 from time import clock
+import ahocorasick
 
 
 def time_analyze(func):
@@ -11,7 +12,7 @@ def time_analyze(func):
     @wraps(func)
     def consume(*args, **kwargs):
         # 重复执行次数（单次执行速度太快）
-        exec_times = 100
+        exec_times = 1000
         start = clock()
         for i in range(exec_times):
             func(*args, **kwargs)
@@ -109,6 +110,57 @@ def navie_algorithm(kws, context):
     return positions
 
 
+@time_analyze
+def rabin_karp_algorithm(kws, context):
+    """ Rabin-Karp 算法 """
+    def matcher(text, pattern, d=1, q=1):
+        n, m = len(text), len(pattern)
+        h, p, t, r = pow(d, m - 1) % q, 0, 0, []
+        for i in range(m):  # preprocessing
+            p = (d * p + ord(pattern[i])) % q
+            t = (d * t + ord(text[i])) % q
+        for s in range(n - m + 1):  # note the +1
+            if p == t:  # check character by character
+                match = True
+                for i in range(m):
+                    if pattern[i] != text[s + i]:
+                        match = False
+                        break
+                if match:
+                    r = r + [s]
+            if s < n - m:
+                t = (t - h * ord(text[s])) % q  # remove letter s
+                t = (t * d + ord(text[s + m])) % q  # add letter s+m
+                t = (t + q) % q  # make sure that t >= 0
+        return r
+
+    positions = {}
+    for kw in kws:
+        positions[kw] = matcher(context, kw)
+
+    return positions
+
+
+@time_analyze
+def ahocorasick_algorithm(kws, context):
+    """ 有限自动机算法 """
+    tree = ahocorasick.Automaton()
+    for i, kw in enumerate(kws):
+        tree.add_word(kw, (i, kw))
+
+    tree.make_automaton()
+
+    positions = {}
+    for item in tree.iter(context):
+        (p, (i, kw)) = item
+        if kw not in positions:
+            positions[kw] = [p]
+        else:
+            positions[kw].append(p)
+
+    return positions
+
+
 def main():
     """ 主函数 """
     context = """
@@ -168,6 +220,8 @@ def main():
     common_algorithm(kws, context)
     kmp_algorithm(kws, context)
     navie_algorithm(kws, context)
+    rabin_karp_algorithm(kws, context)
+    ahocorasick_algorithm(kws, context)
 
 if __name__ == "__main__":
     main()
