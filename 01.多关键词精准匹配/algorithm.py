@@ -11,7 +11,7 @@ def time_analyze(func):
     @wraps(func)
     def consume(*args, **kwargs):
         # 重复执行次数（单次执行速度太快）
-        exec_times = 1000
+        exec_times = 100
         start = clock()
         for i in range(exec_times):
             func(*args, **kwargs)
@@ -27,8 +27,7 @@ def common_algorithm(kws, context):
     """ 使用 Python 默认 字符串查找算法 完成 """
     def position(kw, context):
         """获取关键词在文本中的位置"""
-        positions = []
-        p = 0
+        positions, p = [], 0
         while 1:
             p = context.find(kw, p)
             if p == -1:
@@ -51,6 +50,7 @@ def kmp_algorithm(kws, context):
     """ 使用 KMP 字符串查找算法 完成 """
     class KMP:
         """ KMP 算法 """
+
         def partial(self, pattern):
             """ Calculate partial match table: String -> [Int]"""
             ret = [0]
@@ -83,6 +83,28 @@ def kmp_algorithm(kws, context):
     positions = {}
     for kw in kws:
         positions[kw] = KMP().search(context, kw)
+
+    return positions
+
+
+@time_analyze
+def navie_matcher(kws, context):
+    """ 朴素算法 """
+    def matcher(t, p):
+        """
+        :param t: the string to check
+        :param p: pattern
+        """
+        r, n, m = [], len(t), len(p)
+        for s in xrange(0, n - m + 1):
+            if p == t[s:s + m]:
+                r.append(s)
+
+        return r
+
+    positions = {}
+    for kw in kws:
+        positions[kw] = matcher(context, kw)
 
     return positions
 
@@ -145,6 +167,7 @@ def main():
 
     common_algorithm(kws, context)
     kmp_algorithm(kws, context)
+    navie_matcher(kws, context)
 
 if __name__ == "__main__":
     main()
