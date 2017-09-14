@@ -16,10 +16,11 @@ def time_analyze(func):
         exec_times = 1
         start = clock()
         for i in range(exec_times):
-            func(*args, **kwargs)
+            r = func(*args, **kwargs)
 
         finish = clock()
         print "{:<20}{:10.6} s".format(func.__name__ + ":", finish - start)
+        return r
 
     return consume
 
