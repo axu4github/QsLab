@@ -12,7 +12,7 @@ def time_analyze(func):
     @wraps(func)
     def consume(*args, **kwargs):
         # 重复执行次数（单次执行速度太快）
-        exec_times = 1000
+        exec_times = 100
         start = clock()
         for i in range(exec_times):
             func(*args, **kwargs)
@@ -113,25 +113,53 @@ def navie_algorithm(kws, context):
 @time_analyze
 def rabin_karp_algorithm(kws, context):
     """ Rabin-Karp 算法 """
-    def matcher(text, pattern, d=1, q=1):
-        n, m = len(text), len(pattern)
-        h, p, t, r = pow(d, m - 1) % q, 0, 0, []
-        for i in range(m):  # preprocessing
-            p = (d * p + ord(pattern[i])) % q
-            t = (d * t + ord(text[i])) % q
-        for s in range(n - m + 1):  # note the +1
-            if p == t:  # check character by character
-                match = True
-                for i in range(m):
-                    if pattern[i] != text[s + i]:
-                        match = False
-                        break
-                if match:
-                    r = r + [s]
-            if s < n - m:
-                t = (t - h * ord(text[s])) % q  # remove letter s
-                t = (t * d + ord(text[s + m])) % q  # add letter s+m
-                t = (t + q) % q  # make sure that t >= 0
+    class RollingHash:
+
+        def __init__(self, string, size):
+            self.str = string
+            self.hash = 0
+
+            for i in xrange(0, size):
+                self.hash += ord(self.str[i])
+
+            self.init = 0
+            self.end = size
+
+        def update(self):
+            if self.end <= len(self.str) - 1:
+                self.hash -= ord(self.str[self.init])
+                self.hash += ord(self.str[self.end])
+                self.init += 1
+                self.end += 1
+
+        def digest(self):
+            return self.hash
+
+        def text(self):
+            return self.str[self.init:self.end]
+
+    def matcher(string, substring):
+        if substring == None or string == None:
+            return -1
+
+        if substring == "" or string == "":
+            return -1
+
+        if len(substring) > len(string):
+            return -1
+
+        hs = RollingHash(string, len(substring))
+        hsub = RollingHash(substring, len(substring))
+        hsub.update()
+
+        r = []
+        for i in range(len(string) - len(substring) + 1):
+            if hs.digest() == hsub.digest():
+                if hs.text() == substring:
+                    r.append(i)
+
+            hs.update()
+
         return r
 
     positions = {}
