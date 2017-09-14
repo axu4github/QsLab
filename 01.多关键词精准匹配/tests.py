@@ -2,7 +2,7 @@
 
 import unittest
 import jieba
-from algorithm import (
+from algorithms import (
     common_algorithm,
     kmp_algorithm,
     navie_algorithm,
