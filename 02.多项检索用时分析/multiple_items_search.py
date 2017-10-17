@@ -6,13 +6,14 @@
 
 import MySQLdb
 from solrcloudpy.connection import SolrConnection
+from time import clock
 
 
 MYSQL_HOST = "10.0.1.68"
 MYSQL_USER = "root"
 MYSQL_PASS = "root123"
 MYSQL_DB = "quality"
-KEY_NUMBER = 20
+KEY_NUMBER = 80000
 SQL_PATTERN = """
     SELECT
         callNumber, areaOfJob
@@ -21,7 +22,7 @@ SQL_PATTERN = """
     LIMIT
         {key_number};
 """
-GROUP_NUMBER = 3  # 每组中'项'数量
+GROUP_NUMBER = 100  # 每组中'项'数量
 
 SOLR_NODES = ["10.0.1.27:8983", "10.0.1.28:8983"]
 SOLR_VERSION = "5.5.1"
@@ -74,14 +75,22 @@ def get_solr_querys(items):
 
 def search_by_solr(items):
     coll = SolrConnection(SOLR_NODES, version=SOLR_VERSION)[SOLR_COLLECTION]
+    i = 1 
     for query in get_solr_querys(items):
-        print(coll.search({"q": query}))
+        start = clock()
+        coll.search({"q": query})
+        finish = clock()
+        print "{} {:10.6} s".format(i, finish - start)
+        i += 1
 
 
 def main():
+    start = clock()
     items = get_items()
     print len(items)
     search_by_solr(items)
+    finish = clock()
+    print "F {:10.6} s".format(finish - start)
 
 
 if __name__ == "__main__":
