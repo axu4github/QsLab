@@ -5,6 +5,7 @@
 """
 
 import MySQLdb
+from solrcloudpy.connection import SolrConnection
 
 
 MYSQL_HOST = "10.0.1.68"
@@ -21,6 +22,10 @@ SQL_PATTERN = """
         {key_number};
 """
 GROUP_NUMBER = 3  # 每组中'项'数量
+
+SOLR_NODES = ["10.0.1.27:8983", "10.0.1.28:8983"]
+SOLR_VERSION = "5.5.1"
+SOLR_COLLECTION = "collection1"
 
 
 def grouped_item_by(group_number, items):
@@ -52,9 +57,31 @@ def get_items():
     return grouped_item_by(GROUP_NUMBER, items)
 
 
+def get_solr_querys(items):
+    querys = []
+    for item_group in items:
+        query = []
+        for item in item_group:
+            (call_number, area_of_job) = item
+            query.append("(callnumber:'{call_number}' AND area_of_job:'{area_of_job}')".format(
+                call_number=call_number, area_of_job=area_of_job))
+            query_str = " OR ".join(query)
+
+        querys.append(query_str)
+
+    return querys
+
+
+def search_by_solr(items):
+    coll = SolrConnection(SOLR_NODES, version=SOLR_VERSION)[SOLR_COLLECTION]
+    for query in get_solr_querys(items):
+        print(coll.search({"q": query}))
+
+
 def main():
-    # 打开数据库连接
-    print get_items()
+    items = get_items()
+    print len(items)
+    search_by_solr(items)
 
 
 if __name__ == "__main__":
