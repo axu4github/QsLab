@@ -6,6 +6,7 @@
 
 import MySQLdb
 from solrcloudpy.connection import SolrConnection
+from solrcloudpy.parameters import SearchOptions
 from time import clock
 
 
@@ -13,7 +14,11 @@ MYSQL_HOST = "10.0.1.68"
 MYSQL_USER = "root"
 MYSQL_PASS = "root123"
 MYSQL_DB = "quality"
-KEY_NUMBER = 80000
+KEY_NUMBER = 100  # 一共有多少录音（最大值是 100万）
+GROUP_NUMBER = 50  # 录音分组，多少录音查一次
+START_TIME = 1422720000000  # 查询开始时间
+END_TIME = 1423497600000  # 查询结束时间
+
 SQL_PATTERN = """
     SELECT
         callNumber, areaOfJob
@@ -22,11 +27,10 @@ SQL_PATTERN = """
     LIMIT
         {key_number};
 """
-GROUP_NUMBER = 100  # 每组中'项'数量
-
 SOLR_NODES = ["10.0.1.27:8983", "10.0.1.28:8983"]
 SOLR_VERSION = "5.5.1"
 SOLR_COLLECTION = "collection1"
+SOLR_ROWS = 1000
 
 
 def grouped_item_by(group_number, items):
@@ -64,10 +68,15 @@ def get_solr_querys(items):
         query = []
         for item in item_group:
             (call_number, area_of_job) = item
-            query.append("(callnumber:'{call_number}' AND area_of_job:'{area_of_job}')".format(
+            query.append("(callnumber:*{call_number} AND area_of_job:{area_of_job})".format(
                 call_number=call_number, area_of_job=area_of_job))
             query_str = " OR ".join(query)
 
+        # 每一次查询添加一个时间范围
+        query_str = "start_time:[{start_time} TO {end_time}] AND {query_str}".format(
+            start_time=START_TIME, end_time=END_TIME, query_str=query_str)
+
+        # 将每次查询条件添加到查询条件数组中
         querys.append(query_str)
 
     return querys
@@ -75,13 +84,17 @@ def get_solr_querys(items):
 
 def search_by_solr(items):
     coll = SolrConnection(SOLR_NODES, version=SOLR_VERSION)[SOLR_COLLECTION]
-    i = 1 
+    i = 1
     for query in get_solr_querys(items):
         start = clock()
-        coll.search({"q": query})
+        se = SearchOptions()
+        se.commonparams.q(query).fl("id").rows(SOLR_ROWS)
+        solr_response = coll.search(se)
+        print(solr_response.result.response.numFound)
         finish = clock()
         print "{} {:10.6} s".format(i, finish - start)
         i += 1
+        exit()
 
 
 def main():
