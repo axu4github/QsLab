@@ -14,10 +14,6 @@ SOLR_ROWS = 1000
 class SolrCloud(object):
     """ SolrCloud 查询 """
 
-    def parameter_not_exists(self, param, kwargs):
-        """ 参数不存在 """
-        return param not in kwargs or kwargs[param] is null
-
     def __init__(self, *args, **kwargs):
         super(SolrCloud, self).__init__(*args, **kwargs)
         self.conn = SolrConnection(SOLR_NODES, version=SOLR_VERSION)
