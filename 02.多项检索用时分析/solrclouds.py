@@ -38,15 +38,37 @@ class SolrCloud(object):
 
         return querys
 
+    def perform_search(self, query, start, rows):
+        """ 执行检索 """
+        se = SearchOptions()
+        se.commonparams.q(query).fl("id").start(start).rows(rows)
+        solr_response = self.coll.search(se)
+        return solr_response.result
+
     def search(self, items, start_time, end_time):
+        """ 检索 """
         i = 0
+        results = []
         for query in self.get_solr_querys(items, start_time, end_time):
+            start_rows = 0
             start = clock()
-            se = SearchOptions()
-            se.commonparams.q(query).fl("id").rows(SOLR_ROWS)
-            solr_response = self.coll.search(se)
-            print(solr_response.result.response.numFound)
+            r = self.perform_search(query, start_rows, SOLR_ROWS).response
+            r_num = r.numFound
+            if r_num > 0:
+                results += [doc["id"] for doc in r.docs]
+                if r_num > SOLR_ROWS:
+                    while True:
+                        print(start_rows)
+                        if start_rows > r_num:
+                            break
+
+                        start_rows += SOLR_ROWS
+                        tmp_r = self.perform_search(
+                            query, start_rows, SOLR_ROWS).response
+                        results += [doc["id"] for doc in tmp_r.docs]
+                        print(len(results))
+
             finish = clock()
-            print "{} {:10.6} s".format(i, finish - start)
+            print("{} {:10.6} s".format(i, finish - start))
             i += 1
             exit()
