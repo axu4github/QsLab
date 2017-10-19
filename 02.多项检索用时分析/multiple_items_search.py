@@ -23,7 +23,7 @@ SQL_PATTERN = """
         {key_number};
 """
 
-KEY_NUMBER = 100  # 一共有多少录音（最大值是 100万）
+KEY_NUMBER = 50  # 一共有多少录音（最大值是 100万）
 GROUP_NUMBER = 50  # 录音分组，多少录音查一次
 START_TIME = 1422720000000  # 查询开始时间
 END_TIME = 1423497600000  # 查询结束时间
@@ -59,7 +59,9 @@ def get_items():
 
 def search_by_solr(items):
     sc = SolrCloud()
-    sc.search(items, START_TIME, END_TIME)
+    r = sc.search(items, START_TIME, END_TIME)
+    print("search_by_solr")
+    print(len(r))
 
 
 def main():
