@@ -66,8 +66,8 @@ def kmp_algorithm(kws, context):
             return ret
 
         def search(self, T, P):
-            """ 
-            KMP search main algorithm: String -> String -> [Int] 
+            """
+            KMP search main algorithm: String -> String -> [Int]
             Return all the matching position of pattern string P in S
             """
             partial, ret, j = self.partial(P), [], 0
@@ -173,8 +173,8 @@ def rabin_karp_algorithm(kws, context):
 
 @time_analyze
 def ahocorasick_algorithm(kws, context):
-    """ 
-    有限自动机算法 
+    """
+    有限自动机算法
 
     算法有点问题结果不对差几位，需要调整。
     """
@@ -261,6 +261,7 @@ def main():
     navie_algorithm(kws, context)
     rabin_karp_algorithm(kws, context)
     ahocorasick_algorithm(kws, context)
+
 
 if __name__ == "__main__":
     main()
