@@ -171,6 +171,16 @@ def rabin_karp_algorithm(kws, context):
     return positions
 
 
+def keyword_tree(kws):
+    """ 根据关键词生成关键词树 """
+    tree = ahocorasick.Automaton()
+    for i, kw in enumerate(kws):
+        tree.add_word(kw, (i, kw))
+
+    tree.make_automaton()
+    return tree
+
+
 @time_analyze
 def ahocorasick_algorithm(kws, context):
     """
@@ -178,12 +188,7 @@ def ahocorasick_algorithm(kws, context):
 
     算法有点问题结果不对差几位，需要调整。
     """
-    tree = ahocorasick.Automaton()
-    for i, kw in enumerate(kws):
-        tree.add_word(kw, (i, kw))
-
-    tree.make_automaton()
-
+    tree = keyword_tree(kws)
     positions = {}
     for item in tree.iter(context):
         (p, (i, kw)) = item
@@ -191,6 +196,25 @@ def ahocorasick_algorithm(kws, context):
             positions[kw] = [p]
         else:
             positions[kw].append(p)
+
+    return positions
+
+
+@time_analyze
+def ahocorasick_algorithm_by_sentence(kws, context):
+    """
+    有限自动机算法（按照每局循环）
+    """
+    tree = keyword_tree(kws)
+    sentences = context.split("。")
+    positions = {}
+    for sentence in sentences:
+        for item in tree.iter(sentence):
+            (p, (i, kw)) = item
+            if kw not in positions:
+                positions[kw] = [p]
+            else:
+                positions[kw].append(p)
 
     return positions
 
