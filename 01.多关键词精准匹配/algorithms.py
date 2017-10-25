@@ -285,6 +285,7 @@ def main():
     navie_algorithm(kws, context)
     rabin_karp_algorithm(kws, context)
     ahocorasick_algorithm(kws, context)
+    ahocorasick_algorithm_by_sentence(kws, context)
 
 
 if __name__ == "__main__":
