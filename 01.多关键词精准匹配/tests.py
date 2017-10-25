@@ -7,7 +7,8 @@ from algorithms import (
     kmp_algorithm,
     navie_algorithm,
     rabin_karp_algorithm,
-    ahocorasick_algorithm
+    ahocorasick_algorithm,
+    ahocorasick_algorithm_by_sentence
 )
 
 
@@ -88,6 +89,9 @@ class AlgorithmsTest(unittest.TestCase):
 
     def test_ahocorasick_algorithm(self):
         ahocorasick_algorithm(self.kws, self.context)
+
+    def test_ahocorasick_algorithm_by_sentence(self):
+        ahocorasick_algorithm_by_sentence(self.kws, self.context)
 
 
 if __name__ == "__main__":
