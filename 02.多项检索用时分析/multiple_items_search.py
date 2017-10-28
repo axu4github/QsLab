@@ -5,7 +5,7 @@
 """
 
 import MySQLdb
-from time import clock
+from time import clock, time
 from solrclouds import SolrCloud
 
 
@@ -23,10 +23,10 @@ SQL_PATTERN = """
         {key_number};
 """
 
-KEY_NUMBER = 50  # 一共有多少录音（最大值是 100万）
-GROUP_NUMBER = 50  # 录音分组，多少录音查一次
+KEY_NUMBER = 10000  # 一共有多少录音（最大值是 100万）
+GROUP_NUMBER = 100  # 录音分组，多少录音查一次
 START_TIME = 1422720000000  # 查询开始时间
-END_TIME = 1423497600000  # 查询结束时间
+END_TIME = 1422723600000  # 查询结束时间
 
 
 def grouped_item_by(group_number, items):
@@ -65,12 +65,12 @@ def search_by_solr(items):
 
 
 def main():
-    start = clock()
+    start = time()
     items = get_items()
     print len(items)
     search_by_solr(items)
-    finish = clock()
-    print "F {:10.6} s".format(finish - start)
+    finish = time()
+    print "Total Run Time => [{} s].".format(finish - start)
 
 
 if __name__ == "__main__":
