@@ -40,7 +40,7 @@ class Hbase(object):
         groups = self.grouped_item_by(GROUP_NUMBER, row_keys)
         for group in groups:
             s = time()
-            result.append(self.table.rows(group))
+            result.extend(self.table.rows(group))
             e = time()
             print("{}, {}, {}".format(i, len(group), e - s))
             i += 1

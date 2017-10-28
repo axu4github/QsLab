@@ -7,6 +7,7 @@
 import MySQLdb
 from time import time
 from solrclouds import SolrCloud
+from hbases import Hbase
 from functools import wraps
 
 
@@ -80,15 +81,19 @@ def get_items():
 def search_by_solr(items):
     sc = SolrCloud()
     r = sc.search(items, START_TIME, END_TIME)
-    print("search_by_solr")
-    print(len(r))
+    print("search_by_solr count: {}".format(str(len(r))))
+    return r
 
+@time_analyze
+def get_metas(items):
+    h = Hbase()
+    metas = h.fetchs(items)
+    print("get_metas count: {}".format(str(len(metas))))
+    return metas 
 
 def main():
     start = time()
-    items = get_items()
-    print(len(items))
-    search_by_solr(items)
+    results = get_metas(search_by_solr(get_items()))
     finish = time()
     print("Total Run Time => [{} s].".format(finish - start))
 
