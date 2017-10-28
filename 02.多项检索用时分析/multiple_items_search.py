@@ -7,6 +7,7 @@
 import MySQLdb
 from time import time
 from solrclouds import SolrCloud
+from functools import wraps
 
 
 MYSQL_HOST = "10.0.1.68"
@@ -29,6 +30,23 @@ START_TIME = 1422720000000  # 查询开始时间
 END_TIME = 1422723600000  # 查询结束时间
 
 
+def time_analyze(func):
+    """ 装饰器 获取程序执行时间 """
+    @wraps(func)
+    def consume(*args, **kwargs):
+        # 重复执行次数（单次执行速度太快）
+        exec_times = 1
+        start = time()
+        for i in range(exec_times):
+            r = func(*args, **kwargs)
+
+        finish = time()
+        print("{:<20}{:10.6} s".format(func.__name__ + ":", finish - start))
+        return r
+
+    return consume
+
+
 def grouped_item_by(group_number, items):
     """ '项' 分组 """
     result = []
@@ -47,6 +65,7 @@ def grouped_item_by(group_number, items):
     return result
 
 
+@time_analyze
 def get_items():
     """ 获取所有 '项' 内容 """
     db = MySQLdb.connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB)
@@ -57,6 +76,7 @@ def get_items():
     return grouped_item_by(GROUP_NUMBER, items)
 
 
+@time_analyze
 def search_by_solr(items):
     sc = SolrCloud()
     r = sc.search(items, START_TIME, END_TIME)
