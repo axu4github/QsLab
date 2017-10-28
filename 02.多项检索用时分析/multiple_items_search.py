@@ -5,7 +5,7 @@
 """
 
 import MySQLdb
-from time import clock, time
+from time import time
 from solrclouds import SolrCloud
 
 
