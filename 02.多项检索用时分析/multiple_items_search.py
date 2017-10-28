@@ -67,10 +67,10 @@ def search_by_solr(items):
 def main():
     start = time()
     items = get_items()
-    print len(items)
+    print(len(items))
     search_by_solr(items)
     finish = time()
-    print "Total Run Time => [{} s].".format(finish - start)
+    print("Total Run Time => [{} s].".format(finish - start))
 
 
 if __name__ == "__main__":
