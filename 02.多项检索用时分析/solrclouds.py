@@ -64,12 +64,11 @@ class SolrCloud(object):
         i = 0
         results = []
         for query in self.get_solr_querys(items, start_time, end_time):
-            print(query)
+            # print(query)
             start_rows = 0
             start = time()
             r = self.perform_search(query, start_rows, SOLR_ROWS).response
             r_num = r.numFound
-            print r.numFound
             if r_num > 0:
                 results += [doc["id"] for doc in r.docs]
                 if r_num > SOLR_ROWS:
@@ -84,8 +83,7 @@ class SolrCloud(object):
                         results += [doc["id"] for doc in tmp_r.docs]
 
             finish = time()
-            print("{} {:10.6} s | {} {}".format(
-                i, finish - start, start, finish))
+            print("{}, {}, {:10.6} s".format(i, r_num, finish - start))
             i += 1
 
         return results
