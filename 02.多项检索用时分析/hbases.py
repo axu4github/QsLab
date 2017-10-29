@@ -5,7 +5,6 @@ from time import time
 
 HBASE_HOST = "10.0.3.41"
 HBASE_TABLE = "smartv"
-GET_ROW_NUMBER = 10000
 GROUP_NUMBER = 10000
 
 
