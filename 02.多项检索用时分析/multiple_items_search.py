@@ -84,12 +84,14 @@ def search_by_solr(items):
     print("search_by_solr count: {}".format(str(len(r))))
     return r
 
+
 @time_analyze
 def get_metas(items):
     h = Hbase()
     metas = h.fetchs(items)
     print("get_metas count: {}".format(str(len(metas))))
-    return metas 
+    return metas
+
 
 def main():
     start = time()
