@@ -13,8 +13,8 @@ SQL = """
         voiceTime,associationColumns,areaOfJob,busiType,callType,
         callNumber,accountNo,busiNo,repNo,repGroup,statusInfo,mute,
         riskExponent,muteDuration,speed,interrupt,longTalk,scores,
-        ruleResultModel,ruleResultList,startTime,endTime,active,checkStatus,
-        repTime,isAssociation,isReal,associationActive,
+        ruleResultModel,ruleResultList,ruleResult,startTime,endTime,active,
+        checkStatus,repTime,isAssociation,isReal,associationActive,
         char_length(ruleResultModel) as ruleResultModelLength
     FROM
         QualityFile_20171030

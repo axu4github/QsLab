@@ -56,6 +56,7 @@ class Mysql(object):
 
                 tmp_result["id"] = "{}_{}".format(
                     tmp_result["statisticId"], tmp_result["voiceFileName"])
+                tmp_result["ruleResult"] = tmp_result["ruleResult"].replace("\"", "'")
                 result.append(tmp_result)
 
         return result
