@@ -8,7 +8,7 @@ MYSQL_USER = "root"
 MYSQL_PASS = "root123"
 MYSQL_DB = "quality"
 
-# 26个大写字母
+# 26个小写字母
 ABCD = [chr(i).lower() for i in range(97, 123)]
 RULE_PATTERN = "rule_{index}"
 
