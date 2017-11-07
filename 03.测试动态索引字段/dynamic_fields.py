@@ -20,7 +20,7 @@ SQL = """
         QualityFile_20171030
     ORDER BY
         ruleResultModelLength DESC
-    -- LIMIT 1;
+    LIMIT 10;
 """
 
 OUTPUT_FILE = "result.csv"

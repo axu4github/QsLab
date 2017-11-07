@@ -18,7 +18,7 @@ class Mysql(object):
     def __init__(self, *args, **kwargs):
         super(Mysql, self).__init__(*args, **kwargs)
         self.db = MySQLdb.connect(
-            MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB)
+            MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB, connect_timeout=600000)
         self.cursor = self.db.cursor()
 
     def execute(self, sql):
@@ -54,6 +54,8 @@ class Mysql(object):
 
                         rule_index += 1
 
+                tmp_result["id"] = "{}_{}".format(
+                    tmp_result["statisticId"], tmp_result["voiceFileName"])
                 result.append(tmp_result)
 
         return result
