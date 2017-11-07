@@ -28,11 +28,11 @@ OUTPUT_FILE = "result.csv"
 
 def main():
     items = Mysql().execute(SQL)
-    print(items)
     with open(OUTPUT_FILE, "wb") as f:
         w = csv.DictWriter(f, items[0].keys())
         w.writeheader()
-        for item in items:
+        for i, item in enumerate(items):
+            print(i + 1)
             w.writerow(item)
 
 

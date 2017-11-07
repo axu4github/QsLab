@@ -45,7 +45,13 @@ class Mysql(object):
                         rules = item[24]
                         rule_field_name = RULE_PATTERN.format(
                             index=ABCD[rule_index])
-                        tmp_result[rule_field_name] = rules[rule_index]
+                        # 如果其规则有值
+                        try:
+                            tmp_result[rule_field_name] = rules[rule_index]
+                        # 如果规则没有值，则设置为空
+                        except Exception:
+                            tmp_result[rule_field_name] = ""
+
                         rule_index += 1
 
                 result.append(tmp_result)
