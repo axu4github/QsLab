@@ -4,11 +4,15 @@
 多项检索用时分析
 """
 
+import click
 import MySQLdb
 from time import time
 from solrclouds import SolrCloud
 from hbases import Hbase
 from functools import wraps
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 MYSQL_HOST = "10.0.1.68"
@@ -93,9 +97,28 @@ def get_metas(items):
     return metas
 
 
-def main():
+@time_analyze
+def get_solr_results_from_file(file_path):
+    """ 从文件中获取 Solr 结果 """
+    items = []
+    with open(file_path) as f:
+        for l in f.readlines():
+            items.append(l.rstrip("\n"))
+
+    return items
+
+
+@click.command()
+@click.option("--file_path", default=None, help="SOLR结果文件")
+def main(file_path):
     start = time()
-    results = get_metas(search_by_solr(get_items()))
+    if file_path is not None:
+        base_items = get_solr_results_from_file(file_path)
+    else:
+        base_items = search_by_solr(get_items())
+
+    print("Base Items Number => [{}].".format(len(base_items)))
+    get_metas(base_items)
     finish = time()
     print("Total Run Time => [{} s].".format(finish - start))
 
