@@ -11,10 +11,10 @@ import time
 from functools import wraps
 from solrcloudpy.connection import SolrConnection
 from solrcloudpy.parameters import SearchOptions
+import os
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
-
 
 QUERY_GROUP_NUMBER = 100  # 每次拼多少个条件查询一次
 THREAD_GROUP_NUMBER = 20  # 多少个线程并行查询
@@ -92,27 +92,36 @@ def get_querys_from_file(file_path):
             tmp = l.rstrip("\n").split(",")
             querys.append({"aof": tmp[0], "cn": tmp[1]})
 
-    print(len(querys))
-    return grouped_item_by(QUERY_GROUP_NUMBER, querys)
+    return querys
 
 
 def datetime2timestamp(datetime):
     return int(time.mktime(datetime.timetuple())) * 1000
 
 
-@click.command()
-@click.option("--file_path", default=None, help="待查询的条件")
-def main(file_path):
-    group_querys = get_querys_from_file(file_path)
-    print(len(group_querys))
-    time_str = file_path.split("_")[1]
+def get_range_time(file_path):
+    file_name = os.path.basename(file_path)
+    time_str = file_name.split("_")[1]
     time_delta = datetime.timedelta(days=1)
     start_datetime = datetime.datetime.strptime(time_str, "%Y%m%d")
     start_time = datetime2timestamp(start_datetime)
     end_time = datetime2timestamp(start_datetime + time_delta)
+    return (start_time, end_time)
+
+
+@click.command()
+@click.option("--file_path", default=None, help="待查询的条件")
+def main(file_path):
+    (start_time, end_time) = get_range_time(file_path)
+    querys = get_querys_from_file(file_path)
+    group_querys = grouped_item_by(QUERY_GROUP_NUMBER, querys)
+    print("Total: [{}], Group: [{}], Pre Group Number: [{}]".format(
+        len(querys), len(group_querys), QUERY_GROUP_NUMBER))
 
     i = 1
     thread_groups = grouped_item_by(THREAD_GROUP_NUMBER, group_querys)
+    print("Loop Number: [{}], Pre Thread Number: [{}]".format(
+        len(thread_groups), THREAD_GROUP_NUMBER))
     for thread_group in thread_groups:
         s = time.time()
         threads = []
@@ -126,7 +135,7 @@ def main(file_path):
             t.join()
 
         e = time.time()
-        print("group-{}, {}s".format(i, e - s))
+        print("Loop-{}, {}s".format(i, e - s))
         exit()
         i += 1
 
