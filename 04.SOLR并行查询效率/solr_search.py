@@ -16,6 +16,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+# click 模块配置
+CLICK_CONTEXT_SETTINGS = dict(
+    help_option_names=["-h", "--help"], terminal_width=100)
 QUERY_GROUP_NUMBER = 100  # 每次拼多少个条件查询一次
 THREAD_NUMBER = 20  # 多少个线程并行查询
 SOLR_NODES = ["10.0.1.27:8983", "10.0.1.28:8983"]
@@ -134,7 +137,7 @@ def parallel_by_threads(querys, start_time, end_time):
         i += 1
 
 
-@click.command()
+@click.command(context_settings=CLICK_CONTEXT_SETTINGS)
 @click.option("--file_path", default=None, help="待查询的条件")
 @click.option("--query_group_number",
               default=QUERY_GROUP_NUMBER, help="多少个条件拼一个查询（默认: 100）")
