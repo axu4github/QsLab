@@ -27,18 +27,9 @@ class SolrCloud(object):
             query = []
             for item in item_group:
                 (call_number, area_of_job) = item
-                # query.append("(callnumber:*{call_number} AND area_of_job:{area_of_job})".format(
-                #     call_number=call_number, area_of_job=area_of_job))
                 query.append(
                     "(callnumber:{call_number})".format(call_number=call_number))
-                # query.append("(start_time:[{start_time} TO {end_time}] AND callnumber:*{call_number})".format(
-                # call_number=call_number, start_time=start_time,
-                # end_time=end_time))
                 query_str = " OR ".join(query)
-
-            # 每一次查询添加一个时间范围
-            # query_str = "start_time:[{start_time} TO {end_time}] AND ({query_str})".format(
-            # start_time=start_time, end_time=end_time, query_str=query_str)
 
             query_dic = {
                 "BASE": "start_time:[{start_time} TO {end_time}]".format(start_time=start_time, end_time=end_time),
@@ -64,7 +55,6 @@ class SolrCloud(object):
         i = 0
         results = []
         for query in self.get_solr_querys(items, start_time, end_time):
-            # print(query)
             start_rows = 0
             start = time()
             r = self.perform_search(query, start_rows, SOLR_ROWS).response
