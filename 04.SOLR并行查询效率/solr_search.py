@@ -16,7 +16,8 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 
-GROUP_NUMBER = 20
+QUERY_GROUP_NUMBER = 100  # 每次拼多少个条件查询一次
+THREAD_GROUP_NUMBER = 20  # 多少个线程并行查询
 SOLR_NODES = ["10.0.1.27:8983", "10.0.1.28:8983"]
 SOLR_VERSION = "5.5.1"
 SOLR_COLLECTION = "collection1"
@@ -59,14 +60,19 @@ def grouped_item_by(group_number, items):
     return result
 
 
-# @time_analyze
-def solr_search(query, start_time, end_time):
+@time_analyze
+def solr_search(querys, start_time, end_time):
     conn = SolrConnection(
         SOLR_NODES, version=SOLR_VERSION, timeout=SOLR_TIMEOUT)
     coll = conn[SOLR_COLLECTION]
     # 查询条件准备
-    base_query = "(area_of_job:{aof} AND callnumber:{cn})".format(
-        aof=query["aof"], cn=query["cn"])
+    query_arr = []
+    for query in querys:
+        query_str = "(area_of_job:{aof} AND callnumber:{cn})".format(
+            aof=query["aof"], cn=query["cn"])
+        query_arr.append(query_str)
+
+    base_query = " OR ".join(query_arr)
     fq_query = "start_time: [{start} TO {end}]".format(
         start=start_time, end=end_time)
     se = SearchOptions()
@@ -87,7 +93,7 @@ def get_querys_from_file(file_path):
             querys.append({"aof": tmp[0], "cn": tmp[1]})
 
     print(len(querys))
-    return grouped_item_by(GROUP_NUMBER, querys)
+    return grouped_item_by(QUERY_GROUP_NUMBER, querys)
 
 
 def datetime2timestamp(datetime):
@@ -106,10 +112,11 @@ def main(file_path):
     end_time = datetime2timestamp(start_datetime + time_delta)
 
     i = 1
-    for group_query in group_querys:
+    thread_groups = grouped_item_by(THREAD_GROUP_NUMBER, group_querys)
+    for thread_group in thread_groups:
         s = time.time()
         threads = []
-        for query in group_query:
+        for query in thread_group:
             t = threading.Thread(target=solr_search, name="search_threads",
                                  args=(query, start_time, end_time,))
             t.start()
@@ -120,7 +127,7 @@ def main(file_path):
 
         e = time.time()
         print("group-{}, {}s".format(i, e - s))
-        # exit()
+        exit()
         i += 1
 
 
