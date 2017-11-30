@@ -100,6 +100,7 @@ def datetime2timestamp(datetime):
 
 
 def get_range_time(file_path):
+    """ 根据 文件名 获取 开始时间 和 结束时间 """
     file_name = os.path.basename(file_path)
     time_str = file_name.split("_")[1]
     time_delta = datetime.timedelta(days=1)
@@ -109,17 +110,10 @@ def get_range_time(file_path):
     return (start_time, end_time)
 
 
-@click.command()
-@click.option("--file_path", default=None, help="待查询的条件")
-def main(file_path):
-    (start_time, end_time) = get_range_time(file_path)
-    querys = get_querys_from_file(file_path)
-    group_querys = grouped_item_by(QUERY_GROUP_NUMBER, querys)
-    print("Total: [{}], Group: [{}], Pre Group Number: [{}]".format(
-        len(querys), len(group_querys), QUERY_GROUP_NUMBER))
-
+def parallel_by_threads(querys, start_time, end_time):
+    """ 通过线程进行并行查询 """
     i = 1
-    thread_groups = grouped_item_by(THREAD_GROUP_NUMBER, group_querys)
+    thread_groups = grouped_item_by(THREAD_GROUP_NUMBER, querys)
     print("Loop Number: [{}], Pre Thread Number: [{}]".format(
         len(thread_groups), THREAD_GROUP_NUMBER))
     for thread_group in thread_groups:
@@ -138,6 +132,19 @@ def main(file_path):
         print("Loop-{}, {}s".format(i, e - s))
         exit()
         i += 1
+
+
+@click.command()
+@click.option("--file_path", default=None, help="待查询的条件")
+def main(file_path):
+    if file_path is not None:
+        (start_time, end_time) = get_range_time(file_path)
+        querys = get_querys_from_file(file_path)
+        group_querys = grouped_item_by(QUERY_GROUP_NUMBER, querys)
+        print("Total: [{}], Group: [{}], Pre Group Number: [{}]".format(
+            len(querys), len(group_querys), QUERY_GROUP_NUMBER))
+
+        parallel_by_threads(group_querys, start_time, end_time)
 
 
 if __name__ == "__main__":
