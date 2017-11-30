@@ -17,7 +17,7 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 QUERY_GROUP_NUMBER = 100  # 每次拼多少个条件查询一次
-THREAD_GROUP_NUMBER = 20  # 多少个线程并行查询
+THREAD_NUMBER = 20  # 多少个线程并行查询
 SOLR_NODES = ["10.0.1.27:8983", "10.0.1.28:8983"]
 SOLR_VERSION = "5.5.1"
 SOLR_COLLECTION = "collection1"
@@ -113,9 +113,9 @@ def get_range_time(file_path):
 def parallel_by_threads(querys, start_time, end_time):
     """ 通过线程进行并行查询 """
     i = 1
-    thread_groups = grouped_item_by(THREAD_GROUP_NUMBER, querys)
+    thread_groups = grouped_item_by(THREAD_NUMBER, querys)
     print("Loop Number: [{}], Pre Thread Number: [{}]".format(
-        len(thread_groups), THREAD_GROUP_NUMBER))
+        len(thread_groups), THREAD_NUMBER))
     for thread_group in thread_groups:
         s = time.time()
         threads = []
@@ -136,8 +136,20 @@ def parallel_by_threads(querys, start_time, end_time):
 
 @click.command()
 @click.option("--file_path", default=None, help="待查询的条件")
-def main(file_path):
+@click.option("--query_group_number",
+              default=QUERY_GROUP_NUMBER, help="多少个条件拼一个查询（默认: 100）")
+@click.option("--thread_number",
+              default=THREAD_NUMBER, help="多少个线程并行查询（默认: 20）")
+def main(file_path, query_group_number, thread_number):
     if file_path is not None:
+        if query_group_number is not None:
+            global QUERY_GROUP_NUMBER
+            QUERY_GROUP_NUMBER = query_group_number
+
+        if thread_number is not None:
+            global THREAD_NUMBER
+            THREAD_NUMBER = thread_number
+
         (start_time, end_time) = get_range_time(file_path)
         querys = get_querys_from_file(file_path)
         group_querys = grouped_item_by(QUERY_GROUP_NUMBER, querys)
