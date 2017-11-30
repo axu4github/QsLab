@@ -25,7 +25,10 @@ SOLR_NODES = ["10.0.1.27:8983", "10.0.1.28:8983"]
 SOLR_VERSION = "5.5.1"
 SOLR_COLLECTION = "collection1"
 SOLR_ROWS = 1000000
+# SOLR_ROWS = 10000
 SOLR_TIMEOUT = 6000
+
+r_number = 0  # 查询总数
 
 
 def time_analyze(func):
@@ -75,15 +78,25 @@ def solr_search(querys, start_time, end_time):
             aof=query["aof"], cn=query["cn"])
         query_arr.append(query_str)
 
-    base_query = " OR ".join(query_arr)
-    fq_query = "start_time: [{start} TO {end}]".format(
+    fq_query = " OR ".join(query_arr)
+    base_query = "(start_time: [{start} TO {end}])".format(
         start=start_time, end=end_time)
+    # base_query = " OR ".join(query_arr)
+    # fq_query = "start_time: [{start} TO {end}]".format(
+    #     start=start_time, end=end_time)
+    base_query = "{} AND ({})".format(base_query, fq_query)
+
     se = SearchOptions()
-    se.commonparams.q(base_query).fq(fq_query)
+    # se.commonparams.q(base_query).fq(fq_query)
+    se.commonparams.q(base_query)
     se.commonparams.fl("id").start(0).rows(SOLR_ROWS)
     # 执行查询
-    response = coll.search(se)
-    return response.result
+    r = coll.search(se)
+    docs = r.result.response.docs
+
+    global r_number
+    r_number += len(docs)
+    return docs
 
 
 @time_analyze
@@ -133,8 +146,11 @@ def parallel_by_threads(querys, start_time, end_time):
 
         e = time.time()
         print("Loop-{}, {}s".format(i, e - s))
+        print("Seach Total Number: [{}]".format(r_number))
         exit()
         i += 1
+
+    pass
 
 
 @click.command(context_settings=CLICK_CONTEXT_SETTINGS)
@@ -160,6 +176,8 @@ def main(file_path, query_group_number, thread_number):
             len(querys), len(group_querys), QUERY_GROUP_NUMBER))
 
         parallel_by_threads(group_querys, start_time, end_time)
+
+    pass
 
 
 if __name__ == "__main__":
