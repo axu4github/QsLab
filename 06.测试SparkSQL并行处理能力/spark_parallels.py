@@ -8,6 +8,7 @@ import click
 import threading
 from decorators import time_analyze
 import random
+from pyhive import hive
 import os
 import sys
 reload(sys)
@@ -66,47 +67,75 @@ SQLS = [
     "select s.rep_group timeStr, count(s.rep_group) num from (select filename from predict_result where starttime>='1501516800000' and starttime<='1504195199000' and rate>='0.5' ) p left join (select file_name, rep_group from smartv_hive_main where start_time>='1501516800000' and start_time<='1504195199000' and recorddate>='201708-0' and recorddate<='201708-2' ) s on s.file_name=p.filename where s.file_name!='null' group by s.rep_group order by num desc"
 ]
 
-SPARK_APP_NAME = "spark_parallels"
-SPARK_MASTER = "spark://server349:7077"
-SPARK_HOME = "/opt/spark-2.0.2-bin-hadoop2.6"
-PYSPARK_DIR = os.path.normpath(SPARK_HOME + "/python")
-PY4J_DIR = os.path.normpath(SPARK_HOME + "/python/lib/py4j-0.10.3-src.zip")
+MODES = click.Choice(["common", "thrift"])
 
-if "SPARK_HOME" not in os.environ:
-    os.environ["SPARK_HOME"] = SPARK_HOME
 
-sys.path.insert(0, PYSPARK_DIR)
-sys.path.insert(0, PY4J_DIR)
+def _init_spark_env():
+    """ 初始化 Spark 运行环境 """
+    SPARK_APP_NAME = "spark_parallels"
+    SPARK_MASTER = "spark://server349:7077"
+    SPARK_HOME = "/opt/spark-2.0.2-bin-hadoop2.6"
+    PYSPARK_DIR = os.path.normpath(SPARK_HOME + "/python")
+    PY4J_DIR = os.path.normpath(SPARK_HOME + "/python/lib/py4j-0.10.3-src.zip")
 
-from pyspark import SparkContext, SparkConf
-from pyspark.sql import HiveContext
+    if "SPARK_HOME" not in os.environ:
+        os.environ["SPARK_HOME"] = SPARK_HOME
 
-SPARK_ENVS = {
-    "spark.executor.memory": "30g",
-    "spark.cores.max": 20,
-}
+    sys.path.insert(0, PYSPARK_DIR)
+    sys.path.insert(0, PY4J_DIR)
 
-SPARK_CONF = SparkConf().setAppName(SPARK_APP_NAME).setMaster(SPARK_MASTER)
-for k, v in SPARK_ENVS.items():
-    SPARK_CONF.set(k, v)
+    from pyspark import SparkContext, SparkConf
+    from pyspark.sql import HiveContext
 
-SPARK_CONTEXT = SparkContext(conf=SPARK_CONF)
-SQL_CONTEXT = HiveContext(SPARK_CONTEXT)
+    SPARK_ENVS = {
+        "spark.executor.memory": "20g",
+        "spark.cores.max": 20,
+    }
+
+    SPARK_CONF = SparkConf().setAppName(SPARK_APP_NAME).setMaster(SPARK_MASTER)
+    for k, v in SPARK_ENVS.items():
+        SPARK_CONF.set(k, v)
+
+    SPARK_CONTEXT = SparkContext(conf=SPARK_CONF)
+
+    global SQL_CONTEXT
+    SQL_CONTEXT = HiveContext(SPARK_CONTEXT)
+
+
+def get_random_sql():
+    return SQLS[random.randint(0, len(SQLS) - 1)]
 
 
 @time_analyze
-def spark_parallels():
-    i = random.randint(0, len(SQLS) - 1)
-    sql = SQLS[i]
+def spark_sql_common_mode_parallels():
+    """ 正常提交 Spark 任务（Spark Submit） """
+    sql = get_random_sql()
     print(sql)
     print(SQL_CONTEXT.sql(sql).count())
 
 
 @time_analyze
-def parallel_by_threads(parallels):
+def spark_sql_thrift_mode_parallels():
+    """
+    通过 Thrift 方式提交 SQL
+
+    > cd /opt/spark-2.0.2-bin-hadoop2.6
+    > sbin/start-thriftserver.sh --master spark://10.0.3.49:7077 \
+                                 --executor-memory 20G \
+                                 --total-executor-cores 20
+    """
+    cursor = hive.connect(host="10.0.3.49", port="10003").cursor()
+    sql = get_random_sql()
+    print(sql)
+    cursor.execute(sql)
+    print(len(cursor.fetchall()))
+
+
+@time_analyze
+def parallel_by_threads(parallels, func):
     threads = []
     for i in range(0, parallels):
-        t = threading.Thread(target=spark_parallels, name="spark_parallels_t")
+        t = threading.Thread(target=func, name="spt")
         t.start()
         threads.append(t)
 
@@ -116,8 +145,16 @@ def parallel_by_threads(parallels):
 
 @click.command(context_settings=CLICK_CONTEXT_SETTINGS)
 @click.option("--parallels", default=1, help="并行数量")
-def main(parallels):
-    parallel_by_threads(parallels)
+@click.option("--mode", type=MODES, default="common", help="查询方式")
+def main(parallels, mode):
+    mode = mode.upper()
+    if mode == "COMMON":
+        func = spark_sql_common_mode_parallels
+        _init_spark_env()
+    elif mode == "THRIFT":
+        func = spark_sql_thrift_mode_parallels
+
+    parallel_by_threads(parallels, func)
 
 
 if __name__ == "__main__":
