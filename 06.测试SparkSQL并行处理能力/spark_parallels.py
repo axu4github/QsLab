@@ -9,6 +9,7 @@ import threading
 from decorators import time_analyze
 import random
 from pyhive import hive
+import requests
 import os
 import sys
 reload(sys)
@@ -19,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # click 模块配置
 CLICK_CONTEXT_SETTINGS = dict(
     help_option_names=["-h", "--help"], terminal_width=100)
-MODES = click.Choice(["common", "thrift"])
+MODES = click.Choice(["common", "thrift", "custom"])
 
 
 def get_file_contents(filepath):
@@ -96,6 +97,16 @@ def spark_sql_thrift_mode_parallels():
 
 
 @time_analyze
+def spark_sql_custom_mode_parallels():
+    """ 通过 统一数据管理平台 方式提交 SQL """
+    sql = get_random_sql()
+    print(sql)
+    r = requests.post("http://10.0.3.49:8000/api/querys/",
+                      data={"context": sql})
+    print(r.json()["response_set"]["result_context"]["total"])
+
+
+@time_analyze
 def parallel_by_threads(parallels, func):
     threads = []
     for i in range(0, parallels):
@@ -117,6 +128,8 @@ def main(parallels, mode):
         _init_spark_env()
     elif mode == "THRIFT":
         func = spark_sql_thrift_mode_parallels
+    elif mode == "CUSTOM":
+        func = spark_sql_custom_mode_parallels
 
     parallel_by_threads(parallels, func)
 
